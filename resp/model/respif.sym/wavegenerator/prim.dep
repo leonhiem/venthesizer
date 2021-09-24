@@ -1,0 +1,6 @@
+ieeevarstd_logic_1164ieee.sym/std_logic_1164/prim.var
+ieeesrcstd_logic_1164StdLogic.vhd
+ieeevarnumeric_stdieee.sym/numeric_std/prim.var
+ieeesrcnumeric_stdNumstd.vhd
+.varwavegeneratorrespif.sym/wavegenerator/prim.var
+.srcwavegeneratorrespif.vhd

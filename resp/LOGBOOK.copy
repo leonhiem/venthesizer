@@ -1,0 +1,252 @@
+Sat Apr 25 00:27:44 CEST 2020
+
+Instructions to allow nios2 to boot from SDRAM
+
+Building up the .SOF
+- Follow instructions on: https://www.emb4fun.de/fpga/nutos1/index.html
+  to include SDRAM in the toplevel vhdl and add the right clocks and setup QSYS
+- Other useful links:
+  https://sites.google.com/site/fpgaandco/NiosII-standalone
+  http://geobyjmhembeddedengineer.blogspot.com/2014/06/executing-code-on-nios-ii-directly.html
+  https://forums.intel.com/s/question/0D50P00003yySAiSAM/make-de0-nano-to-be-bootable-and-use-sdram-to-store-hardware-and-software?language=en_US
+  https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/ug/niosii_generic_booting_methods.pdf
+  https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/ug/ug_nios2_flash_programmer.pdf
+  https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/an/an736.pdf
+  https://www.intel.com/content/dam/www/programmable/us/en/pdfs/literature/an/an458.pdf
+
+QSYS:
+- cpu: set reset vector to epcs_flash_controller.epcs_control_port
+       reset vector offset = 0
+       reset vector = 0x1000
+       exception vector memory to sdram.s1
+       vector offset = 0x20
+       exception vector = 0x2000020
+- sdram connect both data_master and instruction_master
+       base address must be 0x02000000 and locked
+- epcs_flash_controller
+       base address = 0x1000
+
+Save and Generate and exit
+
+BSP:
+  cd ../venthesizer_bsp/
+  cd ../..
+  nios2-bsp hal venthesizer_bsp --default_stdio uart_0
+  cd venthesizer_bsp/
+  make clean
+  make
+  cd ..
+  cd software/
+  rm -r venthesizer_bsp/
+  mv ../venthesizer_bsp/ .
+  cd venthesizer
+  make clean
+  make
+
+Quartus: Full compilation until SOF
+
+Generate flash files:
+  cd ../..
+  sof2flash --input="output_files/venthesizer.sof" --output="output_files/venthesizer_epcs_flash_controller.flash" --epcs --verbose 
+  cd -
+  elf2flash --input=venthesizer.elf --outfile=system_epcs_flash_controller_boot_rom.flash --epcs --after=../../output_files/venthesizer_epcs_flash_controller.flash 
+
+Program EPCS flash:
+  nios2-flash-programmer ../../output_files/venthesizer_epcs_flash_controller.flash --base=0x1000 --epcs  --accept-bad-sysid --device=1 --instance=0  --program --verbose
+  nios2-flash-programmer system_epcs_flash_controller_boot_rom.flash --base=0x1000 --epcs  --accept-bad-sysid --device=1 --verify  --program --verbose
+
+Re-power DE0 nano and the firmware should start and a bit later the nios2 should also boot
+
+
+
+
+Sun Apr 19 23:02:17 CEST 2020
+
+
+leon@aeroline:/home/altera/project/niostut/software/hello_world$ nios2-elf-objcopy -O ihex hello_world.elf hello_world.hex
+
+
+
+
+Tue Apr  7 00:08:18 CEST 2020
+
+Note on the multilib in Slackware
+Be very careful installing them because it replaces glibc
+I installed the packages of Slackware 14.2, but they are old. Must be 'current'
+I broke glibc. To fix:
+- download DVD iso of Slackware.current, dd to USB stick
+- boot from that, using USB
+- mount /dev/sda2 to /mnt and /dev/sda1 to /mnt/boot
+- run setup and mount USB stick using Set Sources
+- exit setup and cd to the slackware64 dir
+- run installpkg --root /mnt glibc*txz  (it is in a and ap dir)
+- reboot will be fine
+- I updated the whole. Read the README file on the DVD how to upgrade slackware
+
+leon@aeroline:~$ nios2-terminal
+/home/altera/13.0/nios2eds/bin/nios2-terminal-wrapped: error while loading shared libraries: libjtag_atlantic.so: cannot open shared object file: No such file or directory
+
+leon@aeroline:~$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/altera/13.0//quartus/linux:/usr/lib
+
+leon@aeroline:~$ nios2-terminal
+nios2-terminal: Unable to connect to JTAG UART because another application
+nios2-terminal: is using it (or is using something else which clashes). Please close
+nios2-terminal: the other application and try again.
+
+su -
+cd /dev/bus/usb/005
+chmod 666 *
+
+now it will work
+
+
+Sat Apr  4 22:16:04 CEST 2020
+New Slackware64 version 14.2
+quartus did not start due to an error of missing libpng12 lib
+this is a 32 bit library
+I installed the Alien multilib tree
+still the libpng lib was too new
+
+then I downloaded/compiled the source:
+wget http://archive.ubuntu.com/ubuntu/pool/main/libp/libpng/libpng_1.2.54.orig.tar.xz
+
+tar xvf  libpng_1.2.54.orig.tar.xz 
+
+cd libpng-1.2.54
+./autogen.sh
+./configure
+make -j8 
+sudo make install
+
+also:
+add /usr/local/lib to /etc/ld.so.conf and run ldconfig
+
+
+Sun Dec  7 18:16:03 CET 2014
+
+Setup udev for USB blaster, create a /etc/udev/rules.d/40-altera-usbblaster.rules  file with:
+SUBSYSTEM=="usb", ATTRS{idVendor}=="09fb", ATTRS{idProduct}=="6001|6002|6003", MODE="0666", SYMLINK+="usbblaster" 
+
+reload udev: udevadm control --reload-rules
+
+
+To list the USB blaster use:
+Start the jtagd daemon
+is in: /mnt/aeroline/altera/13.0/quartus/bin/
+       or:
+       /mnt/aeroline/altera/13.0/quartus/linux64/
+
+jtagconfig -d
+this executable is in: /mnt/aeroline/altera/13.0/quartus/bin/
+
+
+
+
+changine the hello world program:
+/mnt/aeroline/altera/project/niostut/software/hello_world
+vi hello_world.c
+
+To recompile hello world and load the ELF file in the nios2:
+cd /mnt/aeroline/altera/project/niostut/software/hello_world
+make
+
+
+Use the:
+nios2-terminal
+to see the output
+
+
+To get the EPCS flash working you need a file: nios2-flash-override.txt
+stored in /mnt/aeroline/altera/13.0/nios2eds/bin
+with the section:
+
+[EPCS-010216] # EPCS64N (lead-free)
+sector_size = 65536
+sector_count = 128
+
+
+for programming the flash:
+sof:
+
+generation:
+sof2flash --input="/mnt/aeroline/altera/project/niostut/output_files/niostut.sof" --output="/mnt/aeroline/altera/project/niostut/software/hello_world_bsp/flash/niostut_epcs_flash_controller.flash" --epcs --verbose 
+
+programming:
+nios2-flash-programmer /mnt/aeroline/altera/project/niostut/software/hello_world_bsp/flash/niostut_epcs_flash_controller.flash --base=0x11000 --epcs --accept-bad-sysid --device=1 --instance=0 --cable=USB-Blaster on localhost [3-2] --program --verbose
+
+elf:
+generation:
+elf2flash --input="/mnt/aeroline/altera/project/niostut/software/hello_world/hello_world.elf" --output="/mnt/aeroline/a
+ltera/project/niostut/software/hello_world_bsp/flash/hello_world_epcs_flash_controller.flash" --epcs --after="/mnt/aero
+line/altera/project/niostut/software/hello_world_bsp/flash/niostut_epcs_flash_controller.flash" --verbose 
+
+programming:
+nios2-flash-programmer "/mnt/aeroline/altera/project/niostut/software/hello_world_bsp/flash/hello_world_epcs_flash_cont
+roller.flash" --base=0x11000 --epcs --accept-bad-sysid --device=1 --instance=0 '--cable=USB-Blaster on localhost [3-2]'
+ --program --verbose 
+
+
+Mon Dec  8 20:47:40 CET 2014
+
+Start jtagd:
+cd  /mnt/aeroline/altera/13.0/quartus/bin/
+. ../../../x1_set_path.sh
+./jtagd
+jtagconfig -d
+
+
+
+Sun Apr 17 18:32:01 CEST 2016
+to access usbblaster:
+lrwxrwxrwx 1 root root 15 Apr 17 18:29 /dev/usbblaster -> bus/usb/005/004
+chmod 666 /dev/bus/usb/005/004 
+
+To download and run the application:
+    1. Make sure the board is connected to the system.
+    2. Run 'nios2-configure-sof <SOF_FILE_PATH>' to configure the FPGA with the hardware design.
+    3. If you have a stdio device, run 'nios2-terminal' in a different shell.
+    4. Run 'make download-elf' from the application directory.
+
+To debug the application:
+    Import the project into Nios II Software Build Tools for Eclipse.
+    Refer to Nios II Software Build Tools for Eclipse Documentation for more information.
+
+---------
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/altera/13.0//quartus/linux
+---------
+leon@aeroline:/home/altera/13.0/nios2eds/bin$ ./nios2-download -g /home/altera/project/niostut/software/hello_world/hello_world.elf 
+
+
+---------
+leon@aeroline:/home/altera/project/niostut/software/hello_world$ ./create-this-app
+leon@aeroline:/home/altera/project/niostut/software/hello_world$ make download-elf
+Info: Building ../hello_world_bsp/
+make --no-print-directory -C ../hello_world_bsp/
+[BSP build complete]
+Info: Downloading hello_world.elf
+/home/altera/13.0/nios2eds/bin/nios2-gdb-server-wrapped: error while loading shared libraries: libjtag_client.so: cannot open shared object file: No such file or directory
+make: *** [download-elf] Error 127
+leon@aeroline:/home/altera/project/niostut/software/hello_world$ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/altera/13.0//quartus/linux
+leon@aeroline:/home/altera/project/niostut/software/hello_world$ make download-elf
+Info: Building ../hello_world_bsp/
+make --no-print-directory -C ../hello_world_bsp/
+[BSP build complete]
+Info: Downloading hello_world.elf
+Using cable "USB-Blaster [5-2]", device 1, instance 0x00
+Pausing target processor: OK
+Reading System ID at address 0x00002120: verified
+Initializing CPU cache (if present)
+OK
+Downloaded 23KB in 0.4s (57.5KB/s)
+Verified OK                         
+Starting processor at address 0x02000184
+
+------------
+leon@aeroline:/home/altera/project/niostut/software$ nios2-bsp hal hello_world_bsp --default_stdio uart_0
+cd hello_world_bsp
+make clean
+make
+cd ../hello_world
+make clean
+make
+

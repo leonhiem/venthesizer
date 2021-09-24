@@ -1,0 +1,5 @@
+ieeevarstd_logic_1164ieee.sym/std_logic_1164/prim.var
+ieeesrcstd_logic_1164StdLogic.vhd
+.varfreqgenerator(behaviour)freqgen.sym/freqgenerator/_behaviour.var
+.srcfreqgenerator(behaviour)freqgenerator_test.vhd
+.varfreqgeneratorfreqgen.sym/freqgenerator/prim.var

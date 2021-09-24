@@ -1,0 +1,32 @@
+#!/bin/sh
+
+project=respif
+today=`date`
+
+echo "--"                      > ${project}.vhd
+echo "-- Project: $project"   >> ${project}.vhd
+echo "-- Author: L. Hiemstra" >> ${project}.vhd
+echo "-- Date: ${today}"      >> ${project}.vhd
+echo "--"                     >> ${project}.vhd
+
+# dual port synchronous 16 bit data / 5 bit address memory
+cat ff/sdpram_prl_addr_width_5_width_16.vhd >> ${project}.vhd
+
+# 16 bit register
+cat ff/dffien_prl_width_16.vhd >> ${project}.vhd
+
+# Frequency generator model:
+cat synth/counterdownlden_prl_width_16.vhd >> ${project}.vhd
+cat synth/freqgenerator/freqgenerator.vhd >> ${project}.vhd
+
+# Synthesizer model:
+cat synth/comperator.vhd >> ${project}.vhd
+cat synth/synthesizer/synthesizer.vhd >> ${project}.vhd
+
+# Wave generator model:
+cat synth/counterUp_prl_width_12.vhd >> ${project}.vhd
+cat synth/wavegenerator.vhd >> ${project}.vhd
+
+# Main part:
+cat main.vhd >> ${project}.vhd
+

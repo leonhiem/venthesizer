@@ -1,0 +1,9 @@
+ieeevarstd_logic_1164ieee.sym/std_logic_1164/prim.var
+ieeesrcstd_logic_1164StdLogic.vhd
+ieeevarstd_logic_arithieee.sym/std_logic_arith/prim.var
+ieeesrcstd_logic_arithStdLogicArith.vhd
+ieeevarstd_logic_unsignedieee.sym/std_logic_unsigned/prim.var
+ieeesrcstd_logic_unsignedStdLogicUnsigned.vhd
+.varcounterup_prl(behv)respif.sym/counterup_prl/_behv.var
+.srccounterup_prl(behv)respif.vhd
+.varcounterup_prlrespif.sym/counterup_prl/prim.var

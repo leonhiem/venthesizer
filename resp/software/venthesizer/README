@@ -1,0 +1,1 @@
+nios2-elf-objcopy -O ihex venthesizer.elf  venthesizer.hex

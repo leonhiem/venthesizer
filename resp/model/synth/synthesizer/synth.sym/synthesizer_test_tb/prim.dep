@@ -1,0 +1,6 @@
+ieeevarstd_logic_1164ieee.sym/std_logic_1164/prim.var
+ieeesrcstd_logic_1164StdLogic.vhd
+ieeevarstd_logic_textioieee.sym/std_logic_textio/prim.var
+ieeesrcstd_logic_textioStdLogicTextio.vhd
+.varsynthesizer_test_tbsynth.sym/synthesizer_test_tb/prim.var
+.srcsynthesizer_test_tbsynthesizer_test_tb.vhd

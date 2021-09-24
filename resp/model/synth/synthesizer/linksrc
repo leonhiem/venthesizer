@@ -1,0 +1,22 @@
+#!/bin/sh
+
+project=synthesizer_test
+today=`date`
+
+echo "--"                      > ${project}.vhd
+echo "-- Project: $project"   >> ${project}.vhd
+echo "-- Author: L. Hiemstra" >> ${project}.vhd
+echo "-- Date: ${today}"      >> ${project}.vhd
+echo "--"                     >> ${project}.vhd
+
+# 16 bit register
+cat ../../ff/dffien_prl_width_16.vhd >> ${project}.vhd
+
+# Frequency generator model:
+cat ../counterdownlden_prl_width_16.vhd >> ${project}.vhd
+cat ../freqgenerator/freqgenerator.vhd >> ${project}.vhd
+
+# Synthesizer model:
+cat ../comperator.vhd >> ${project}.vhd
+cat synthesizer.vhd >> ${project}.vhd
+
